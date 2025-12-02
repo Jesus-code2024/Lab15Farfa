@@ -139,7 +139,7 @@ app.post('/2fa/verify', async (req, res) => {
 });
 
 // 👉 RUTA FINAL: si no existe, devolver index.html
-app.get('*', (req, res) => {
+app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
