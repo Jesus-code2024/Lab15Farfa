@@ -20,24 +20,33 @@
 <script>
 async function verify() {
     const tempToken = localStorage.getItem("tempToken");
-    const token2fa = token.value;
+    const token2fa = document.getElementById("token").value;
 
-    const res = await fetch("/2fa/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tempToken, token: token2fa })
-    });
+    if (!token2fa) {
+        return alert("Por favor ingresa el código 2FA");
+    }
 
-    const data = await res.json();
+    try {
+        const res = await fetch("/2fa/verify", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tempToken, token: token2fa })
+        });
 
-    if (!res.ok) return alert(data.error);
+        const data = await res.json();
 
-    // Guardamos el token final
-    localStorage.setItem("accessToken", data.accessToken);
+        if (!res.ok) return alert("Error: " + (data.error || "Código incorrecto"));
 
-    alert("2FA verificado ✓");
+        // Guardamos el token final
+        localStorage.setItem("accessToken", data.accessToken);
+        localStorage.removeItem("tempToken");
 
-    window.location = "dashboard.html";
+        alert("2FA verificado ✓");
+        window.location.href = "dashboard.html";
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión al servidor");
+    }
 }
 </script>
 </body>

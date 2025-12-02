@@ -3,121 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login | Registro</title>
-
-  <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(135deg, #4e54c8, #8f94fb);
-      font-family: "Poppins", sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-
-    .container {
-      background: rgba(255, 255, 255, 0.15);
-      padding: 40px;
-      width: 350px;
-      border-radius: 20px;
-      backdrop-filter: blur(10px);
-      text-align: center;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-      color: white;
-    }
-
-    h2 {
-      margin-bottom: 20px;
-      font-size: 28px;
-    }
-
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 10px 0;
-      border-radius: 12px;
-      border: none;
-      outline: none;
-      font-size: 16px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 15px;
-      border: none;
-      border-radius: 12px;
-      background: #fff;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-      color: #4e54c8;
-      transition: 0.3s;
-    }
-
-    button:hover {
-      background: #dfe0ff;
-    }
-
-    .toggle {
-      margin-top: 20px;
-      cursor: pointer;
-      color: #fff;
-      text-decoration: underline;
-      font-size: 14px;
-    }
-  </style>
+  <title>Bienvenido - App 2FA</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-  <div class="container">
-    <h2 id="title">Iniciar Sesión</h2>
 
-    <input type="email" id="email" placeholder="Correo electrónico" />
-    <input type="password" id="password" placeholder="Contraseña" />
-
-    <button onclick="login()">Ingresar</button>
-
-    <div class="toggle" onclick="toggleMode()">
-      ¿No tienes cuenta? Regístrate aquí
-    </div>
+<div class="card">
+  <h1>🔐 Aplicación con 2FA</h1>
+  <p>Sistema de autenticación de dos factores con AWS RDS y Docker</p>
+  
+  <div style="margin-top: 30px;">
+    <a href="login.html" style="display: inline-block; margin: 10px;">
+      <button>Iniciar Sesión</button>
+    </a>
+    <a href="register.html" style="display: inline-block; margin: 10px;">
+      <button>Registrarse</button>
+    </a>
   </div>
+</div>
 
-  <script>
-    let isLogin = true;
-
-    function toggleMode() {
-      isLogin = !isLogin;
-      document.getElementById("title").textContent =
-        isLogin ? "Iniciar Sesión" : "Crear Cuenta";
-      document.querySelector("button").textContent =
-        isLogin ? "Ingresar" : "Registrarse";
-    }
-
-    async function login() {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-
-      if (!email || !password) {
-        alert("Completa todos los campos");
-        return;
-      }
-
-      const endpoint = isLogin
-        ? "/login"
-        : "/register";
-
-      const response = await fetch(`http://34.227.81.83:3000${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-      alert(JSON.stringify(data));
-    }
-  </script>
 </body>
 </html>

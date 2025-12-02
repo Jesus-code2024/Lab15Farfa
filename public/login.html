@@ -18,32 +18,42 @@
     <p><a href="register.html">¿No tienes cuenta? Regístrate</a></p>
 </div>
 
-<script src="app.js"></script>
 <script>
 async function login() {
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
 
-    const res = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
-    });
+    if (!email || !password) {
+        return alert("Por favor completa todos los campos");
+    }
 
-    const data = await res.json();
-    console.log(data);
+    try {
+        const res = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
 
-    if (!res.ok) return alert(data.error);
+        const data = await res.json();
+        console.log("Login response:", data);
 
-    // Guardamos tempToken temporalmente
-    localStorage.setItem("tempToken", data.tempToken);
+        if (!res.ok) {
+            return alert("Error: " + (data.error || "Credenciales inválidas"));
+        }
 
-    // Si ya tiene 2FA activado, ir a verificar
-    if (data.twofa_enabled) {
-        window.location.href = "verify-2fa.html";
-    } else {
-        // Si no tiene 2FA, ir a activarlo
-        window.location.href = "activate-2fa.html";
+        // Guardamos tempToken temporalmente
+        localStorage.setItem("tempToken", data.tempToken);
+
+        // Si ya tiene 2FA activado, ir a verificar
+        if (data.twofa_enabled) {
+            window.location.href = "verify-2fa.html";
+        } else {
+            // Si no tiene 2FA, ir a activarlo
+            window.location.href = "activate-2fa.html";
+        }
+    } catch (error) {
+        console.error("Login error:", error);
+        alert("Error de conexión al servidor");
     }
 }
 </script>
