@@ -21,8 +21,8 @@
 <script src="app.js"></script>
 <script>
 async function login() {
-    const email = email.value;
-    const password = password.value;
+    const email = document.getElementById("email").value;
+    const password = document.getElementById("password").value;
 
     const res = await fetch("/login", {
         method: "POST",
@@ -38,8 +38,13 @@ async function login() {
     // Guardamos tempToken temporalmente
     localStorage.setItem("tempToken", data.tempToken);
 
-    // Redirigimos a activar 2FA
-    window.location = "activate-2fa.html";
+    // Si ya tiene 2FA activado, ir a verificar
+    if (data.twofa_enabled) {
+        window.location.href = "verify-2fa.html";
+    } else {
+        // Si no tiene 2FA, ir a activarlo
+        window.location.href = "activate-2fa.html";
+    }
 }
 </script>
 </body>
