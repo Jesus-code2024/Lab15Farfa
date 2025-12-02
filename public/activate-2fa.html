@@ -10,11 +10,14 @@
 <div class="card">
     <h2>Activar Autenticación 2FA</h2>
 
-    <p>Escanea este código con Google Authenticator:</p>
-
-    <img id="qr" width="250" />
+    <p>Haz clic para generar tu código QR:</p>
 
     <button onclick="activar2FA()">Generar código QR</button>
+
+    <div id="qr-container" style="display:none; margin: 20px 0;">
+        <p>Escanea este código con Google Authenticator:</p>
+        <img id="qr" width="250" style="border: 2px solid #ddd; padding: 10px; background: white;" />
+    </div>
 
     <p><a href="verify-2fa.html">Ya escaneé el código → Verificar</a></p>
 </div>
@@ -25,20 +28,32 @@
 async function activar2FA() {
     const tempToken = localStorage.getItem("tempToken");
 
-    const res = await fetch("/2fa/setup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tempToken })
-    });
+    if (!tempToken) {
+        alert("No hay sesión activa. Por favor inicia sesión primero.");
+        window.location.href = "/login.html";
+        return;
+    }
 
-    const data = await res.json();
-    console.log(data);
+    try {
+        const res = await fetch("/2fa/setup", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tempToken })
+        });
 
-    if (data.qr) {
-        document.getElementById("qr").src = data.qr;
-        alert("Código generado. Escanéalo con Google Authenticator.");
-    } else {
-        alert("Error generando el QR");
+        const data = await res.json();
+        console.log(data);
+
+        if (data.qr) {
+            document.getElementById("qr").src = data.qr;
+            document.getElementById("qr-container").style.display = "block";
+            alert("Código generado. Escanéalo con Google Authenticator.");
+        } else {
+            alert("Error generando el QR: " + (data.error || "Desconocido"));
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error de conexión al servidor");
     }
 }
 </script>
