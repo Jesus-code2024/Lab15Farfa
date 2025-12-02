@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Activar 2FA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+    <h2>Activar Autenticación 2FA</h2>
+
+    <p>Escanea este código con Google Authenticator:</p>
+
+    <img id="qr" width="250" />
+
+    <button onclick="activar2FA()">Generar código QR</button>
+
+    <p><a href="verify-2fa.html">Ya escaneé el código → Verificar</a></p>
+</div>
+
+<script src="app.js"></script>
+
+<script>
+async function activar2FA() {
+    const tempToken = localStorage.getItem("tempToken");
+
+    const res = await fetch("/2fa/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempToken })
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    if (data.qr) {
+        document.getElementById("qr").src = data.qr;
+        alert("Código generado. Escanéalo con Google Authenticator.");
+    } else {
+        alert("Error generando el QR");
+    }
+}
+</script>
+</body>
+</html>

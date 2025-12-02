@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Iniciar Sesión</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+    <h2>Iniciar Sesión</h2>
+
+    <input id="email" type="email" placeholder="Correo" />
+    <input id="password" type="password" placeholder="Contraseña" />
+
+    <button onclick="login()">Ingresar</button>
+
+    <p><a href="register.html">¿No tienes cuenta? Regístrate</a></p>
+</div>
+
+<script src="app.js"></script>
+<script>
+async function login() {
+    const email = email.value;
+    const password = password.value;
+
+    const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    if (!res.ok) return alert(data.error);
+
+    // Guardamos tempToken temporalmente
+    localStorage.setItem("tempToken", data.tempToken);
+
+    // Redirigimos a activar 2FA
+    window.location = "activate-2fa.html";
+}
+</script>
+</body>
+</html>

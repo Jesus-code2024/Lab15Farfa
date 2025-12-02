@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Verificar 2FA</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+    <h2>Verificar Código 2FA</h2>
+
+    <input id="token" type="text" placeholder="Ingresa el código 2FA">
+
+    <button onclick="verify()">Verificar</button>
+</div>
+
+<script src="app.js"></script>
+
+<script>
+async function verify() {
+    const tempToken = localStorage.getItem("tempToken");
+    const token2fa = token.value;
+
+    const res = await fetch("/2fa/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tempToken, token: token2fa })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) return alert(data.error);
+
+    // Guardamos el token final
+    localStorage.setItem("accessToken", data.accessToken);
+
+    alert("2FA verificado ✓");
+
+    window.location = "dashboard.html";
+}
+</script>
+</body>
+</html>
