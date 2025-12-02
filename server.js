@@ -6,19 +6,26 @@ const { Pool } = require('pg');
 const speakeasy = require('speakeasy');
 const qrcode = require('qrcode');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
+
 app.use(express.json());
 app.use(cors());
+
+// 👉 SERVIR FRONTEND (página bonita en public/)
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Conexión a PostgreSQL RDS
 const pool = new Pool({
   host: process.env.DB_HOST,
-  port: process.env.DB_PORT,
+  port: Number(process.env.DB_PORT),
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  ssl: { rejectUnauthorized: false }
 });
+
 
 // Registro de usuario
 app.post('/register', async (req, res) => {
@@ -66,65 +73,74 @@ app.post('/login', async (req, res) => {
 
 // Activar 2FA
 app.post('/2fa/setup', async (req, res) => {
-  const { tempToken } = req.body;
+  try {
+    const { tempToken } = req.body;
 
-  const { userId } = jwt.verify(tempToken, process.env.JWT_SECRET);
+    const { userId } = jwt.verify(tempToken, process.env.JWT_SECRET);
 
-  const secret = speakeasy.generateSecret({
-    name: 'MiApp AWS - 2FA',
-  });
+    const secret = speakeasy.generateSecret({
+      name: 'MiApp AWS - 2FA',
+    });
 
-  // Guardamos el secreto en la BD
-  await pool.query(
-    'UPDATE users SET twofa_secret = $1, twofa_enabled = true WHERE id = $2',
-    [secret.base32, userId]
-  );
+    await pool.query(
+      'UPDATE users SET twofa_secret = $1, twofa_enabled = true WHERE id = $2',
+      [secret.base32, userId]
+    );
 
-  // Generamos QR
-  const qr = await qrcode.toDataURL(secret.otpauth_url);
+    const qr = await qrcode.toDataURL(secret.otpauth_url);
 
-  res.json({
-    message: 'Escanea este código con Google Authenticator',
-    qr,
-    otpauth_url: secret.otpauth_url
-  });
+    res.json({
+      message: 'Escanea este código con Google Authenticator',
+      qr,
+      otpauth_url: secret.otpauth_url
+    });
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: 'Error al generar 2FA' });
+  }
 });
 
 // Verificar 2FA
 app.post('/2fa/verify', async (req, res) => {
-  const { tempToken, token } = req.body;
+  try {
+    const { tempToken, token } = req.body;
 
-  const { userId } = jwt.verify(tempToken, process.env.JWT_SECRET);
+    const { userId } = jwt.verify(tempToken, process.env.JWT_SECRET);
 
-  const result = await pool.query('SELECT twofa_secret FROM users WHERE id = $1', [userId]);
-  const user = result.rows[0];
+    const result = await pool.query('SELECT twofa_secret FROM users WHERE id = $1', [userId]);
+    const user = result.rows[0];
 
-  if (!user) return res.status(400).json({ error: 'Usuario no encontrado' });
+    if (!user) return res.status(400).json({ error: 'Usuario no encontrado' });
 
-  const verified = speakeasy.totp.verify({
-    secret: user.twofa_secret,
-    encoding: 'base32',
-    token,
-  });
+    const verified = speakeasy.totp.verify({
+      secret: user.twofa_secret,
+      encoding: 'base32',
+      token,
+    });
 
-  if (!verified) return res.status(401).json({ error: 'Código 2FA incorrecto' });
+    if (!verified) return res.status(401).json({ error: 'Código 2FA incorrecto' });
 
-  // Token final
-  const accessToken = jwt.sign(
-    { userId },
-    process.env.JWT_SECRET,
-    { expiresIn: '1h' }
-  );
+    const accessToken = jwt.sign(
+      { userId },
+      process.env.JWT_SECRET,
+      { expiresIn: '1h' }
+    );
 
-  res.json({
-    message: 'Acceso exitoso',
-    accessToken
-  });
+    res.json({
+      message: 'Acceso exitoso',
+      accessToken
+    });
+
+  } catch (e) {
+    console.log(e);
+    res.status(500).json({ error: 'Error al verificar 2FA' });
+  }
 });
 
-// Prueba
-app.get('/', (req, res) => {
-  res.send('API funcionando correctamente');
+// 👉 RUTA FINAL: si no existe, devolver index.html
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 app.listen(process.env.PORT, () => {
